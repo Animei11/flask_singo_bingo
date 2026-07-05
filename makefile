@@ -23,7 +23,7 @@ freeze:
 
 # Testing without running Flask
 test:
-	$(PYTHON) -m app.test.test
+	$(PYTHON) -m pytest
 
 # So I don't have to use the GUI anymore to debug
 debug:
@@ -41,6 +41,12 @@ debug:
 	@echo "Loading bingo card for TESTS..."
 	@$(PYTHON) -m webbrowser $(APP_URL2)
 	@wait
+
+# Test with vercel before deploying
+vercel:
+	@echo "Starting: Vercel local run"
+	npx vercel dev
+	@echo "DONE: Vercel local run complete."
 
 # So I don't have to use the GUI anymore to debug
 kill:

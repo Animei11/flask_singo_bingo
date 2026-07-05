@@ -12,9 +12,9 @@ lobby_bp = Blueprint('lobby', __name__)
 # Retrieves all active lobby codes
 @lobby_bp.route('/db/getLobbyCode')
 def get_lobby_code():
-    listOfLobbies = db_get_all_active_lobbies()
-    print(listOfLobbies)
-    return jsonify(listOfLobbies)
+    list_of_lobbies = db_get_all_active_lobbies()
+    print(list_of_lobbies)
+    return jsonify(list_of_lobbies)
 
 @lobby_bp.route('/db/getPlayerAvatar')
 def get_player_avatar():

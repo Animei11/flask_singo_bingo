@@ -17,14 +17,14 @@ def create_app():
     # Register models
     from app import models
     # Register blueprints
-    from app.routes.musicPlayerRoutes import musicPlayerRoutes_bp
-    app.register_blueprint(musicPlayerRoutes_bp)
+    from app.routes.music_player_routes import music_player_routes_bp
+    app.register_blueprint(music_player_routes_bp)
 
-    from app.routes.playerRoutes import playerRoutes_bp
-    app.register_blueprint(playerRoutes_bp)
+    from app.routes.player_routes import player_routes_bp
+    app.register_blueprint(player_routes_bp)
 
-    from app.blueprints.mainMenu import mainMenu_bp
-    app.register_blueprint(mainMenu_bp)
+    from app.blueprints.main_menu import main_menu_bp
+    app.register_blueprint(main_menu_bp)
 
     from app.blueprints.login import login_bp
     app.register_blueprint(login_bp)
@@ -32,8 +32,8 @@ def create_app():
     from app.blueprints.lobby import lobby_bp
     app.register_blueprint(lobby_bp)
 
-    from app.spotify.oauth import spotifyOAuth_bp
-    app.register_blueprint(spotifyOAuth_bp)
+    from app.music_player.spotify.oauth import spotify_oauth_bp
+    app.register_blueprint(spotify_oauth_bp)
 
     from app.blueprints.spotify import spotify_bp
     app.register_blueprint(spotify_bp)

@@ -15,8 +15,7 @@ from app.services.db_lobby_service import (
     db_add_playlist_to_lobby
 )
 from app.services.game_service import GameState
-from app.spotify.service import SpotifyService
-from app.spotify.decorator import require_spotify
+from app.music_player.spotify.decorator import require_spotify
 
 
 spotify_bp = Blueprint('spotify', __name__)
@@ -47,8 +46,7 @@ def spotify_get_selected_playlist():
     game.reset_playlist()
     game.set_playlist_id(playlist_id)
     db_add_playlist_to_lobby(lobby_code=lobby_code, playlist_id=playlist_id)
-    spotify = SpotifyService(g.sp)
-    playlist_details = spotify.getPlaylistDetails(playlist_id=playlist_id, playlist_uri=playlist_uri)
+    playlist_details = g.music_provider.get_playlist_details(playlist_id=playlist_id, playlist_uri=playlist_uri)
     db_add_all_songs(playlist_details, playlist_id)
     return jsonify({"ok": True})  
 
@@ -108,17 +106,16 @@ def spotify_get_master_playlist():
 @spotify_bp.route('/spotify/playlists/playsong', methods=['GET'])
 @require_spotify
 def play_song():
-    # song_uri = request.args.get("song_uri")
-    # spotify = SpotifyService(g.sp)
-    # spotify.playSong(song_uri)
-    # spotify.playSong('spotify:track:5p9UNx7gLRdRoaEHd8TAnz')
+    song_uri = request.args.get("song_uri")
+    if not song_uri:
+        return jsonify({"ok": False, "error": "Missing song_uri"}), 400
+    g.music_provider.play_song(song_uri)
     return jsonify({"ok": True})
 
 @spotify_bp.route('/spotify/playlists/stopsong')
 @require_spotify
 def stop_song():
-    # spotify = SpotifyService(g.sp)
-    # spotify.stopSong()
+    g.music_provider.stop_song()
     return jsonify({"ok": True})
 
 @spotify_bp.route('/spotify/playlists/nextIndex')
@@ -136,8 +133,7 @@ def next_index():
 @spotify_bp.route('/spotify/playlists/pausesong')
 @require_spotify
 def pause_song():
-    # spotify = SpotifyService(g.sp)
-    # spotify.pauseSong()
+    # g.music_provider.pause_song()
     return jsonify({"ok": True})
 
 

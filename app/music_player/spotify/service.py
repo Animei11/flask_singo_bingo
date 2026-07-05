@@ -1,19 +1,22 @@
 # Overview: All Spotify logic
-class SpotifyService:
+from app.music_player.base import MusicProvider
+
+
+class SpotifyProvider(MusicProvider):
     def __init__(self, sp):
         self.sp = sp
 
     # TODO - Add logic to determine if there is an active device (and start one if not?)
-    def isActiveDevice(self):
+    def is_active_device(self):
         pass
 
-    def playSong(self, song_uri):
+    def play_song(self, song_uri):
         self.sp.start_playback(uris=[song_uri])
 
-    def stopSong(self):
+    def stop_song(self):
         self.sp.pause_playback()
 
-    def getPlaylistDetails(self, playlist_uri, playlist_id):
+    def get_playlist_details(self, playlist_uri, playlist_id):
         playlist = self.sp.playlist(playlist_uri, fields="tracks.items(track(name,uri))")
 
         return [

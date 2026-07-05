@@ -146,3 +146,5 @@ vite.config.ts.timestamp-*
 
 # MacOS files
 .DS_Store
+.vercel
+.env*.local

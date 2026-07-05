@@ -21,7 +21,7 @@ def create_user():
     if not username or not lobby_code:
         return jsonify({"ok": False, "error": "Missing something"}), 400
     session["username"] = username
-    session["lobbyCode"] = lobby_code
+    session["lobby_code"] = lobby_code
     GameState.get_game(lobby_code).add_player(username)
     db_add_player(username=username, lobby_code=lobby_code)
     return jsonify({"ok": True})

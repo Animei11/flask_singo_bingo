@@ -5,7 +5,7 @@ from spotipy import Spotify
 from spotipy.oauth2 import SpotifyOAuth
 from dotenv import load_dotenv
 
-spotifyOAuth_bp = Blueprint('spotifyOAuth', __name__)
+spotify_oauth_bp = Blueprint('spotify_oauth', __name__)
 load_dotenv()
 
 # Step 1: Set up Spotify configurations
@@ -16,13 +16,13 @@ spotify_oauth = SpotifyOAuth(
     scope="playlist-read-private user-read-playback-state user-modify-playback-state",
 )
 # Step 2: Redirect user to Spotify for authentication
-@spotifyOAuth_bp.route("/spotify/login")
+@spotify_oauth_bp.route("/spotify/login")
 def spotify_login():
     auth_url = spotify_oauth.get_authorize_url()
     return redirect(auth_url)
 
 # Step 3: Creates access token after Spotify redirects back
-@spotifyOAuth_bp.route("/callback")
+@spotify_oauth_bp.route("/callback")
 def spotify_callback():
     code = request.args.get("code")
     token_info = spotify_oauth.get_access_token(code)
