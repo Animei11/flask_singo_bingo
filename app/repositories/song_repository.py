@@ -1,34 +1,16 @@
-import random
-from flask import jsonify
-from app.models.playlists import Playlist
+# Overview: All direct database access for the Song model. No business rules here.
 from psycopg2.extras import execute_values
 from sqlalchemy import text
-from app.extensions import db 
+from app.extensions import db
 
 
-""" Returns a list of playlists depending on what mode is put in param
-    DEFAULT: Return all
-"""
-# TODO: Add different modes as fit
-def db_get_playlists(playlist_mode: str = None):
-    playlists = Playlist.query.all()
-    playlists_list = [{"id": playlist.playlist_id, 
-                       "playlist_uri": playlist.playlist_uri,
-                       "playlist_name": playlist.playlist_name
-                       }for playlist in playlists]
-    if playlist_mode == 'classic':
-        random.shuffle(playlists_list)
-        playlists_list = playlists_list[:4]
-    return playlists_list
-
-
-""" Adding songs to song db if it does not exist already """
-def db_add_all_songs(playlist_details, playlist_id):
+def add_all_if_missing(playlist_details, playlist_id):
+    """ Adding songs to song db if it does not exist already """
     # Check if playlist already exists
     result = db.session.execute(
         text("SELECT 1 FROM songs WHERE playlist_id = :playlist_id LIMIT 1;"),
         {"playlist_id": playlist_id}
-        ).fetchone()    
+        ).fetchone()
 
     if result is None:
         conn = db.session.connection().connection
@@ -43,16 +25,17 @@ def db_add_all_songs(playlist_details, playlist_id):
     else:
         print("Songs already exist for this playlist.")
 
-"""  """
-def db_get_songs_for_bingo_card(lobby_code):
+
+def get_for_lobby(lobby_code):
+    """ Returns the songs belonging to the playlist attached to this lobby """
     result = db.session.execute(
         text("""
-             SELECT song_name, song_uri FROM lobbies 
+             SELECT song_name, song_uri FROM lobbies
              join songs on lobbies.playlist_id = songs.playlist_id
              where lobby_code = :lobby_code;"""),
         {"lobby_code": lobby_code}
-        ).fetchall() 
-    if result is None: 
+        ).fetchall()
+    if result is None:
         print("Error retrieving songs for bingo")
     result = [dict(song_name=row.song_name, song_uri=row.song_uri) for row in result]
     return result

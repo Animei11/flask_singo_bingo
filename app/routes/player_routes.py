@@ -1,6 +1,5 @@
 # OVERVIEW: Routes for players
 from flask import Blueprint, render_template, request, jsonify, session, url_for, redirect
-from app.services.db_lobby_service import db_get_lobby
 
 player_routes_bp = Blueprint("player_routes", __name__)
 @player_routes_bp.route('/')

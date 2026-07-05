@@ -6,14 +6,7 @@ from flask import (
     request,
     g
 ) 
-from app.services.db_playlist_service import (
-    db_get_playlists,
-    db_add_all_songs,
-    db_get_songs_for_bingo_card
-)
-from app.services.db_lobby_service import (
-    db_add_playlist_to_lobby
-)
+from app.services import lobby_service, playlist_service
 from app.services.game_service import GameState
 from app.music_player.spotify.decorator import require_spotify
 
@@ -26,7 +19,7 @@ spotify_bp = Blueprint('spotify', __name__)
 def spotify_get_playlists():
     # TODO: Create wheel to display later
     mode = request.args.get("mode")
-    list_of_playlists = db_get_playlists(playlist_mode=mode)
+    list_of_playlists = playlist_service.get_playlists(playlist_mode=mode)
     return jsonify(list_of_playlists)
 
 
@@ -45,9 +38,9 @@ def spotify_get_selected_playlist():
     game.reset_bingo_players()  # Reset all players' bingo cards when a new playlist is selected
     game.reset_playlist()
     game.set_playlist_id(playlist_id)
-    db_add_playlist_to_lobby(lobby_code=lobby_code, playlist_id=playlist_id)
+    lobby_service.add_playlist_to_lobby(lobby_code=lobby_code, playlist_id=playlist_id)
     playlist_details = g.music_provider.get_playlist_details(playlist_id=playlist_id, playlist_uri=playlist_uri)
-    db_add_all_songs(playlist_details, playlist_id)
+    playlist_service.add_all_songs(playlist_details, playlist_id)
     return jsonify({"ok": True})  
 
 
@@ -71,7 +64,7 @@ def spotify_get_playlist_songs():
     if playlist:
         songs = playlist 
     else:
-        songs = db_get_songs_for_bingo_card(lobby_code)
+        songs = playlist_service.get_songs_for_bingo_card(lobby_code)
         game.set_playlist(songs)
     random.shuffle(songs)
     songs = [song["song_name"] for song in songs]
@@ -93,7 +86,7 @@ def spotify_get_master_playlist():
     if playlist:
         songs = playlist 
     else:
-        songs = db_get_songs_for_bingo_card(lobby_code)
+        songs = playlist_service.get_songs_for_bingo_card(lobby_code)
         random.shuffle(songs)
         game.set_playlist(songs)
     return jsonify({

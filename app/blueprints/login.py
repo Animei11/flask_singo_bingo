@@ -1,11 +1,6 @@
 #OVERVIEW: Login page for user to create username, join lobby, and pick an avatar
 from flask import Blueprint, jsonify, request, session
-from app.services.db_player_service import (
-    db_add_player, 
-    db_get_avatars,
-    db_assign_avatar_to_player,
-    db_mark_avatar_taken
-)
+from app.services import player_service
 from app.services.game_service import GameState
 
 
@@ -23,7 +18,7 @@ def create_user():
     session["username"] = username
     session["lobby_code"] = lobby_code
     GameState.get_game(lobby_code).add_player(username)
-    db_add_player(username=username, lobby_code=lobby_code)
+    player_service.add_player(username=username, lobby_code=lobby_code)
     return jsonify({"ok": True})
 
 # Adds selected avatar to user in db
@@ -35,13 +30,13 @@ def add_avatar_selected():
     print(f"Avatar selected: {avatar_id}")
     if not username or not avatar_id:
         return jsonify({"ok": False, "error": "Missing username or avatar_id"}), 400
-    db_assign_avatar_to_player(username=username, avatar_id=avatar_id)
-    db_mark_avatar_taken(avatar_id=avatar_id)
-    return jsonify({"ok": True})  
+    player_service.assign_avatar_to_player(username=username, avatar_id=avatar_id)
+    player_service.mark_avatar_taken(avatar_id=avatar_id)
+    return jsonify({"ok": True})
 
 # Retrieves available avatars from db
 @login_bp.route('/db/GetAvatarImages')
 def get_avatar_images():
-    avatar_list = db_get_avatars()
+    avatar_list = player_service.get_avatar_list()
     print(avatar_list)
     return jsonify(avatar_list)
