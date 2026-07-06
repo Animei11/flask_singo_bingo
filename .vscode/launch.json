@@ -5,11 +5,11 @@
             "name": "Python: Flask (Debug .venv)",
             "type": "python",
             "request": "launch",
-            "program": "${workspaceFolder}/run.py",
+            "program": "${workspaceFolder}/app.py",
             "console": "integratedTerminal",
             "python": "${workspaceFolder}/.venv/bin/python",
             "env": {
-                "FLASK_APP": "run.py",
+                "FLASK_APP": "app.py",
                 "FLASK_ENV": "development"
             },
             "args": [

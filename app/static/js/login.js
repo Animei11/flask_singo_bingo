@@ -33,6 +33,7 @@ function addUser(username, lobbyCode) {
     fetch("/db/createUser", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
             username: username,
             lobby_code: lobbyCode

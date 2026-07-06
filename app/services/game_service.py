@@ -37,9 +37,9 @@ class GameState:
         redis_client.set(f"game:{self.lobby_code}", json.dumps(state))
 
 
-    # ---------------------------
+    # -----------------------------
     # Players - Setters and Getters 
-    # ---------------------------
+    # -----------------------------
     def add_player(self, username: str):
         """Add a player to the game."""
         state = self.get_state()
@@ -52,6 +52,87 @@ class GameState:
             redis_client.set(f"game:{self.lobby_code}", json.dumps(state))
 
 
+    # -----------------------------
+    # Players - Bingo-specific
+    # -----------------------------
+    def add_bingo_player(self, username: str, bingo_card: list):
+        """Add a player with a bingo card."""
+        state = self.get_state()
+        if "bingo_players" not in state:
+            state["bingo_players"] = {}
+
+        if username not in state["bingo_players"] or state["bingo_players"][username]["bingo_card"] == []:
+            state["bingo_players"][username] = {
+                "bingo_card": bingo_card,  # 5x5 list
+                "marked_tiles": [],  # List of marked tile positions (i, j)
+                "has_bingo": False
+            }
+            redis_client.set(f"game:{self.lobby_code}", json.dumps(state))
+        print(f"Added bingo player {username} with card {bingo_card} to game {self.lobby_code}")
+    
+    def reset_bingo_players(self):
+        """Reset bingo players for a new game."""
+        state = self.get_state()
+        state["bingo_players"] = {}
+        redis_client.set(f"game:{self.lobby_code}", json.dumps(state))
+
+    def mark_tile(self, username: str, song_name: str):
+        """Mark a tile for a player."""
+        state = self.get_state()
+        player = state.get("bingo_players", {}).get(username)
+        if not player:
+            raise ValueError("Player not found")
+        # TODO: Fix tile pos, always returns None
+        if song_name == "FREE SPACE":
+            tile_pos = (2, 2) 
+        else:
+            print(f"Songs: {player['bingo_card']}")
+            for i in range(25):
+                row = i // 5
+                col = i % 5
+                if player["bingo_card"][i] == song_name:
+                    tile_pos = (row, col)
+                    break
+
+        if tile_pos not in player["marked_tiles"]:
+            player["marked_tiles"].append(tile_pos)
+            redis_client.set(f"game:{self.lobby_code}", json.dumps(state))
+        print(f"Marked tile {tile_pos} for player {username} in game {self.lobby_code}")
+
+    def check_bingo(self, username: str):
+        """Check if a player has bingo."""
+        state = self.get_state()
+        player = state.get("bingo_players", {}).get(username)
+        if not player:
+            raise ValueError("Player not found")
+        print(f"Checking bingo for player {username} with marked tiles {player['marked_tiles']} in game {self.lobby_code}")
+        marked = { (r, c) for r, c in player['marked_tiles'] }
+        lines = []
+        # Rows
+        for r in range(5):
+            lines.append([(r, c) for c in range(5)])
+        # Columns
+        for c in range(5):
+            lines.append([(r, c) for r in range(5)])
+        # Diagonals
+        lines.append([(i, i) for i in range(5)])
+        lines.append([(i, 4 - i) for i in range(5)])
+        return any(all(coord in marked for coord in line) for line in lines)
+
+    def set_winner(self, username: str):
+        """Set the winner of the bingo game."""
+        state = self.get_state()
+        state["winner"] = username
+        if username in state.get("bingo_players", {}):
+            state["bingo_players"][username]["has_bingo"] = True
+        redis_client.set(f"game:{self.lobby_code}", json.dumps(state))
+
+    def get_player_state(self, username: str):
+        """Return the bingo-specific state for a player."""
+        state = self.get_state()
+        existing_player = state.get("bingo_players", {}).get(username)
+        return existing_player if existing_player else None
+    
     # ------------------------------------
     # Playlist/Songs - Setters and Getters 
     # ------------------------------------
@@ -67,7 +148,7 @@ class GameState:
         print(songs)
         state["playlist"] = songs
         state["index"] = 0
-        state["current_song"] = songs[0]["song_name"] if songs else None
+        state["current_song"] = songs[0] if songs else None
         redis_client.set(f"game:{self.lobby_code}", json.dumps(state))
 
     def get_playlist(self):
@@ -85,10 +166,33 @@ class GameState:
             return state["current_song"]
         return None
     
+    def get_current_song(self):
+        state = self.get_state()
+        current_song = state["current_song"]["song_name"] if state["current_song"] else None
+        return current_song
+    
+    # ----------
+    # Resetters
+    # ----------
+    def reset_playlist(self):
+        state = self.get_state()
+        state["playlist_id"] = None
+        state["playlist"] = []
+        state["index"] = 0
+        state["current_song"] = None
+        redis_client.set(f"game:{self.lobby_code}", json.dumps(state))
+    
+    def delete_game(self):
+        if not redis_client.exists(f"game:{self.lobby_code}"):
+            raise ValueError("Game does not exist")
 
-    # -----------------------------
+        redis_client.delete(f"game:{self.lobby_code}")
+        print("Game deleted successfully")
+        return "Game deleted successfully"
+
+    # -------------
     # Class Methods
-    # -----------------------------
+    # -------------
     @classmethod
     def get_game(cls, lobby_code: str):
         """Return the GameState instance for a lobby code."""
@@ -113,42 +217,4 @@ class GameState:
 
         redis_client.set(f"game:{lobby_code}", json.dumps(initial_state))
 
-        return cls(lobby_code)
-    
-    @classmethod
-    def delete_game(cls, lobby_code: str):
-        if not redis_client.exists(f"game:{lobby_code}"):
-            raise ValueError("Game does not exist")
-
-        redis_client.delete(f"game:{lobby_code}")
-        print("Game deleted successfully")
-        return "Game deleted successfully"
-    
-    @classmethod
-    def set_playlist_id_for_game(cls, lobby_code, playlist_id):
-        game = cls.get_game(lobby_code)
-        game.set_playlist_id(playlist_id)
-
-    @classmethod
-    def set_playlist_for_game(cls, lobby_code, songs):
-        game = cls.get_game(lobby_code)
-        game.set_playlist(songs)
-
-    @classmethod
-    def add_player_for_game(cls, lobby_code, username):
-        game = cls.get_game(lobby_code)
-        game.add_player(username)
-
-    @classmethod
-    def get_current_song_for_game(cls, lobby_code):
-        game = cls.get_game(lobby_code)
-        state = game.get_state()
-        return state["current_song"]["song_name"]
-    
-    @classmethod
-    def reset_song_index_for_game(cls, lobby_code):
-        game = cls.get_game(lobby_code)
-        state = game.get_state()
-        state["index"] = 0
-        state["current_song"] = state["playlist"][0]
-        redis_client.set(f"game:{lobby_code}", json.dumps(state))
+        return cls(lobby_code) 

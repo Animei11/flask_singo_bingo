@@ -10,11 +10,14 @@
   </head>
   <body>
     <input type="hidden" id="lobby-code" value="{{ lobbyCode }}">
+    <input type="hidden" id="username" value="{{ username }}">
     <input type="hidden" id="playlist-id" value="{{ playlistId }}">
-    <h1>Bingo Card</h1>
     <!-- Creates the floating notes in the background  -->
     <div id="floating-notes-container"></div>
-
+    <!-- Displays avatar selected -->
+    <div id="avatar-container">
+      <div id="avatar-display"></div>
+    </div>
     <!-- Creates bingo card -->
     <div id="bingo-card">
       <div id="bingo-header-row"></div>

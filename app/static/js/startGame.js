@@ -75,7 +75,7 @@ async function displaySongCurrentlyPlaying() {
             songEl.textContent = `Song Currently Playing: ${songTitle}`;
             songVisualContainer.appendChild(songEl);
             // Step 4: Play 20 seconds and silence for 5 
-            await delay(15000); // Play song for 15
+            await delay(5000); // Play song for 15
             await fetch('/spotify/playlists/stopsong');
             await delay(5000); // Stop song for 5
             await fetch(`/spotify/playlists/nextIndex?lobby_code=${lobbyCode}`); // Move to next song in playlist

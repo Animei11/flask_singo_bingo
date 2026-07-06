@@ -3,8 +3,8 @@ PYTHON := .venv/bin/python
 FLASK  := .venv/bin/flask
 PIP := .venv/bin/pip
 # APP_URL := http://127.0.0.1:5000//db/testGame
-APP_URL1 := http://127.0.0.1:5000/startGame/TESTS
-APP_URL2 := http://127.0.0.1:5000/bingoCard/TESTS
+APP_URL1 := http://127.0.0.1:5000/mainMenu
+APP_URL2 := http://127.0.0.1:5000/login
 # Initial setup
 setup:
 	@echo "STARTING: Creating .venv"
@@ -23,13 +23,13 @@ freeze:
 
 # Testing without running Flask
 test:
-	$(PYTHON) -m app.test.test
+	$(PYTHON) -m pytest
 
 # So I don't have to use the GUI anymore to debug
 debug:
 	@lsof -ti:5000 | xargs kill || true
 	@echo "🚀 Starting Flask (debug + reload)..."
-	FLASK_APP=run.py \
+	FLASK_APP=app.py \
 	FLASK_ENV=development \
 	FLASK_DEBUG=1 \
 	$(FLASK) run --reload --debugger &
@@ -41,6 +41,12 @@ debug:
 	@echo "Loading bingo card for TESTS..."
 	@$(PYTHON) -m webbrowser $(APP_URL2)
 	@wait
+
+# Test with vercel before deploying
+vercel:
+	@echo "Starting: Vercel local run"
+	npx vercel dev
+	@echo "DONE: Vercel local run complete."
 
 # So I don't have to use the GUI anymore to debug
 kill:
