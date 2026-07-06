@@ -2,13 +2,18 @@
 from faker import Faker
 from app.repositories import lobby_repository
 
+MAX_LOBBY_CODE_ATTEMPTS = 10
+
 # TODO: Add a trigger to know when a user is added to that lobby for the circle of avatars to display
-""" Generates lobby code with 5 letters """
+""" Generates a lobby code with 5 letters, retrying if it collides with an existing lobby """
 def generate_lobby_code():
     faker = Faker()
-    lobby_code = faker.bothify(text='?????', letters='ABCDEFGHIJKLMNOPQRSTUVWXYZ')
-    print(f'Generated Lobby Code: {lobby_code}')
-    return lobby_code
+    for _ in range(MAX_LOBBY_CODE_ATTEMPTS):
+        lobby_code = faker.bothify(text='?????', letters='ABCDEFGHIJKLMNOPQRSTUVWXYZ')
+        if lobby_repository.get_by_code(lobby_code) is None:
+            print(f'Generated Lobby Code: {lobby_code}')
+            return lobby_code
+    raise RuntimeError("Could not generate a unique lobby code after several attempts")
 
 
 def get_lobby(lobby_code):

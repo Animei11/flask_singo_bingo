@@ -6,6 +6,8 @@ catch a different category of bug -- "does the route actually wire these
 pieces together correctly" -- at the cost of being slower and telling you
 less precisely where a failure came from. Good suites have both kinds.
 """
+import pytest
+
 from app.extensions import db
 from app.models.lobbies import Lobby
 from app.models.playlists import Playlist
@@ -49,3 +51,41 @@ def test_get_playlists_returns_seeded_playlists(client, app):
     playlists = response.get_json()
     assert len(playlists) == 1
     assert playlists[0]["playlist_name"] == "My Mix"
+
+
+# Regression tests for a real bug: lobby_repository.get_by_code used to
+# return the string "Error: Lobby not found" instead of None, and a
+# non-empty string is truthy -- so these routes' `if not lobby_exists`
+# checks never fired for a lobby that was never created.
+def test_lobby_page_404s_for_unknown_lobby_code(client):
+    response = client.get("/lobby/NOPE")
+
+    assert response.status_code == 404
+
+
+def test_start_game_404s_for_unknown_lobby_code(client):
+    response = client.get("/startGame/NOPE")
+
+    assert response.status_code == 404
+
+
+def test_game_over_404s_for_unknown_lobby_code(client):
+    response = client.get("/gameOver/NOPE")
+
+    assert response.status_code == 404
+
+
+# Regression test for a real bug: require_spotify used to catch bare
+# `except Exception`, so a totally unrelated bug inside get_spotify_client
+# would get reported to the client as "please log in" instead of surfacing.
+def test_require_spotify_lets_unexpected_errors_propagate(client, monkeypatch):
+    with client.session_transaction() as sess:
+        sess["spotify_token"] = {"access_token": "x"}
+
+    monkeypatch.setattr(
+        "app.music_player.spotify.decorator.get_spotify_client",
+        lambda token: (_ for _ in ()).throw(RuntimeError("boom")),
+    )
+
+    with pytest.raises(RuntimeError):
+        client.get("/spotify/playlists/playsong?song_uri=spotify:track:1")

@@ -4,11 +4,8 @@ from app.models.lobbies import Lobby
 
 
 def get_by_code(lobby_code):
-    """ Get lobby by lobby code """
-    lobby = Lobby.query.filter_by(lobby_code=lobby_code).first()
-    if not lobby:
-        return "Error: Lobby not found"
-    return lobby
+    """ Get lobby by lobby code, or None if it doesn't exist """
+    return Lobby.query.filter_by(lobby_code=lobby_code).first()
 
 
 def get_all_active_codes():
@@ -29,9 +26,9 @@ def create(lobby_code: str, player_mode: int, playlist_mode: str):
 
 
 def add_playlist(lobby_code: str, playlist_id: int):
-    """ Add playlist to lobby """
+    """ Add playlist to lobby, or None if the lobby doesn't exist """
     lobby = Lobby.query.filter_by(lobby_code=lobby_code).first()
     if not lobby:
-        return "Error: Lobby not found"
+        return None
     lobby.playlist_id = playlist_id
     db.session.commit()

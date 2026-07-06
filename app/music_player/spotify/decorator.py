@@ -1,5 +1,6 @@
 from functools import wraps
 from flask import session, jsonify, g
+from spotipy.oauth2 import SpotifyOauthError
 from app.music_player.spotify.oauth import get_spotify_client
 from app.music_player.spotify.service import SpotifyProvider
 
@@ -12,7 +13,7 @@ def require_spotify(f):
 
         try:
             g.music_provider = SpotifyProvider(get_spotify_client(token))
-        except Exception:
+        except SpotifyOauthError:
             return jsonify({"auth_required": True}), 401
 
         return f(*args, **kwargs)

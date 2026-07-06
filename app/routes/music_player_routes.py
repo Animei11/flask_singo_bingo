@@ -22,9 +22,9 @@ def main_menu():
 def lobby(lobby_code):
     lobby_exists = lobby_service.get_lobby(lobby_code)
     print(lobby_exists)
-    print(GameState.get_game(lobby_code).get_state())
     if not lobby_exists:
         return "Lobby not found", 404
+    print(GameState.get_game(lobby_code).get_state())
     return render_template('lobby.html', lobbyCode=lobby_code)
 
 # Starts playing music

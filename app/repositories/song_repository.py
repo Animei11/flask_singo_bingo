@@ -15,7 +15,7 @@ def add_all_if_missing(playlist_details, playlist_id):
     if result is None:
         conn = db.session.connection().connection
         with conn.cursor() as cur:
-            data_to_insert = [(uri, name, playlist_id) for (uri, name) in playlist_details]
+            data_to_insert = [(uri, name, playlist_id) for (uri, name, _) in playlist_details]
             query = """
                 INSERT INTO songs (song_uri, song_name, playlist_id)
                 VALUES %s;
